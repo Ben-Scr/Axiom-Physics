@@ -6,9 +6,6 @@ namespace BoltPhys {
     class BOLT_PHYS_API KinematicBody final : public Body
     {
     public:
-        KinematicBody() : Body(BodyType::Kinematic)
-        {
-            SetGravityEnabled(false);
-        }
+        KinematicBody();
     };
 }

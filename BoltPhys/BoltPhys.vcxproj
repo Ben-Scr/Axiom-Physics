@@ -38,7 +38,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\Body.cpp" />
+    <ClCompile Include="src\BoxCollider.cpp" />
+    <ClCompile Include="src\CircleCollider.cpp" />
+    <ClCompile Include="src\Collider.cpp" />
+    <ClCompile Include="src\DynamicBody.cpp" />
+    <ClCompile Include="src\KinematicBody.cpp" />
     <ClCompile Include="src\PhysicsWorld.cpp" />
+    <ClCompile Include="src\PolygonCollider.cpp" />
+    <ClCompile Include="src\StaticBody.cpp" />
+    <ClCompile Include="src\Vec2.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
