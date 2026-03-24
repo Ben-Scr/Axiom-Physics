@@ -6,14 +6,14 @@ namespace BoltPhys {
     class BOLT_PHYS_API BoxCollider final : public Collider
     {
     public:
-        explicit BoxCollider(const Vec2& scale);
+        explicit BoxCollider(const Vec2& halfExtents);
 
-        const Vec2& GetScale() const noexcept;
-        void SetScale(const Vec2& scale) noexcept;
+        const Vec2& GetHalfExtents() const noexcept;
+        void SetHalfExtents(const Vec2& halfExtents) noexcept;
 
         AABB ComputeAABB() const override;
 
     private:
-        Vec2 m_HalfExtends;
+        Vec2 m_halfExtents;
     };
 }
