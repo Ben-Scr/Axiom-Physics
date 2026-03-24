@@ -129,6 +129,7 @@ namespace BoltPhys {
 
         IntegrateBodies(dt);
         DetectCollisions();
+        ResolveContacts();
     }
 
     std::size_t PhysicsWorld::GetBodyCount() const noexcept
@@ -204,6 +205,57 @@ namespace BoltPhys {
                 }
 
                 m_contacts.push_back(BuildContact(*bodyA, *bodyB));
+            }
+        }
+    }
+
+    void PhysicsWorld::ResolveContacts()
+    {
+        for (const Contact& contact : m_contacts) {
+            Body* bodyA = contact.bodyA;
+            Body* bodyB = contact.bodyB;
+            if (bodyA == nullptr || bodyB == nullptr || contact.penetration <= 0.0f) {
+                continue;
+            }
+
+            const bool moveA = bodyA->GetType() == BodyType::Dynamic;
+            const bool moveB = bodyB->GetType() == BodyType::Dynamic;
+            if (!moveA && !moveB) {
+                continue;
+            }
+
+            const float invMassA = moveA ? (1.0f / bodyA->GetMass()) : 0.0f;
+            const float invMassB = moveB ? (1.0f / bodyB->GetMass()) : 0.0f;
+            const float invMassSum = invMassA + invMassB;
+            if (invMassSum <= 0.0f) {
+                continue;
+            }
+
+            const Vec2 correction = contact.normal * contact.penetration;
+            if (moveA) {
+                const float ratioA = invMassA / invMassSum;
+                bodyA->SetPosition(bodyA->GetPosition() - (correction * ratioA));
+            }
+            if (moveB) {
+                const float ratioB = invMassB / invMassSum;
+                bodyB->SetPosition(bodyB->GetPosition() + (correction * ratioB));
+            }
+
+            if (moveA) {
+                Vec2 velocityA = bodyA->GetVelocity();
+                const float normalVelocityA = Dot(velocityA, contact.normal);
+                if (normalVelocityA > 0.0f) {
+                    velocityA -= contact.normal * normalVelocityA;
+                    bodyA->SetVelocity(velocityA);
+                }
+            }
+            if (moveB) {
+                Vec2 velocityB = bodyB->GetVelocity();
+                const float normalVelocityB = Dot(velocityB, contact.normal);
+                if (normalVelocityB < 0.0f) {
+                    velocityB -= contact.normal * normalVelocityB;
+                    bodyB->SetVelocity(velocityB);
+                }
             }
         }
     }
