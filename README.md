@@ -14,6 +14,7 @@ BoltPhys is a minimalist, DLL-friendly 2D physics engine for C++ with a clear se
 - World bounds can be enabled globally, while boundary checks can be toggled on or off per body.
 - `StaticBody` disables gravity and boundary checks by default.
 - There is intentionally **no rotation** and **no bounce/restitution physics**.
+- Overlaps are resolved with a simple penetration correction for dynamic bodies.
 
 ## Example
 ```cpp
