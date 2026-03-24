@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\DynamicBody.hpp" />
     <ClInclude Include="include\AABB.hpp" />
     <ClInclude Include="include\Body.hpp" />
     <ClInclude Include="include\BodyType.hpp" />
@@ -28,6 +29,7 @@
     <ClInclude Include="include\ColliderType.hpp" />
     <ClInclude Include="include\Contact.hpp" />
     <ClInclude Include="include\Export.hpp" />
+    <ClInclude Include="include\KinematicBody.hpp" />
     <ClInclude Include="include\PhysicsWorld.hpp" />
     <ClInclude Include="include\PolygonCollider.hpp" />
     <ClInclude Include="include\Vec2.hpp" />

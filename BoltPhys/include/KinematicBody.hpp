@@ -3,12 +3,11 @@
 #include "Body.hpp"
 
 namespace BoltPhys {
-    class BOLT_PHYS_API StaticBody final : public Body
+    class BOLT_PHYS_API KinematicBody final : public Body
     {
     public:
-        StaticBody() : Body(BodyType::Static)
+        KinematicBody() : Body(BodyType::Kinematic)
         {
-            SetBoundaryCheckEnabled(false);
             SetGravityEnabled(false);
         }
     };
