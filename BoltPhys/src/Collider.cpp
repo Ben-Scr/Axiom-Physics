@@ -1,9 +1,18 @@
 #include "Collider.hpp"
+#include "Body.hpp"
 
 namespace BoltPhys {
     Collider::Collider(ColliderType type) noexcept
         : m_type(type)
     {
+    }
+
+    Collider::~Collider()
+    {
+        if (m_body != nullptr) {
+            m_body->AttachCollider(nullptr);
+            m_body = nullptr;
+        }
     }
 
     ColliderType Collider::GetType() const noexcept
