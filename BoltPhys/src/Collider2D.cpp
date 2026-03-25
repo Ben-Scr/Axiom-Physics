@@ -7,11 +7,6 @@ namespace BoltPhys {
     {
     }
 
-    Collider2D::~Collider2D()
-    {
-      
-    }
-
     void Collider2D::Destroy() {
         if (m_body != nullptr) {
             m_body->AttachCollider(nullptr);
