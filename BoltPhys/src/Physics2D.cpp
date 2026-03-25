@@ -34,7 +34,7 @@ namespace BoltPhys {
             return Dot(delta, delta) <= radius * radius;
         }
 
-        bool ContainsPointBox(BoxCollider& box, const Vec2& point) noexcept
+        bool ContainsPointBox(BoxCollider2D& box, const Vec2& point) noexcept
         {
             const Vec2 center = GetColliderWorldPosition(box);
             const Vec2 half = box.GetHalfExtents();
@@ -42,7 +42,7 @@ namespace BoltPhys {
             return ContainsPointInAABB(aabb, point);
         }
 
-        bool ContainsPointPolygon(PolygonCollider& polygon, const Vec2& point) noexcept
+        bool ContainsPointPolygon(PolygonCollider2D& polygon, const Vec2& point) noexcept
         {
             const std::size_t vertexCount = polygon.GetVertexCount();
             const Vec2* vertices = polygon.GetVertices();
@@ -82,9 +82,9 @@ namespace BoltPhys {
             case ColliderType::Circle:
                 return ContainsPointCircle(static_cast<CircleCollider&>(collider), point);
             case ColliderType::Box:
-                return ContainsPointBox(static_cast<BoxCollider&>(collider), point);
+                return ContainsPointBox(static_cast<BoxCollider2D&>(collider), point);
             case ColliderType::Polygon:
-                return ContainsPointPolygon(static_cast<PolygonCollider&>(collider), point);
+                return ContainsPointPolygon(static_cast<PolygonCollider2D&>(collider), point);
             default:
                 return ContainsPointInAABB(collider.ComputeAABB(), point);
             }

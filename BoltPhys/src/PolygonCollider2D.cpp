@@ -6,12 +6,12 @@
 #include <limits>
 
 namespace BoltPhys {
-    PolygonCollider::PolygonCollider()
+    PolygonCollider2D::PolygonCollider2D()
         : Collider2D(ColliderType::Polygon)
     {
     }
 
-    void PolygonCollider::SetVertices(const Vec2* vertices, std::size_t count)
+    void PolygonCollider2D::SetVertices(const Vec2* vertices, std::size_t count)
     {
         m_vertices.clear();
         if (vertices == nullptr || count == 0) {
@@ -21,17 +21,17 @@ namespace BoltPhys {
         m_vertices.assign(vertices, vertices + count);
     }
 
-    std::size_t PolygonCollider::GetVertexCount() const noexcept
+    std::size_t PolygonCollider2D::GetVertexCount() const noexcept
     {
         return m_vertices.size();
     }
 
-    const Vec2* PolygonCollider::GetVertices() const noexcept
+    const Vec2* PolygonCollider2D::GetVertices() const noexcept
     {
         return m_vertices.empty() ? nullptr : m_vertices.data();
     }
 
-    AABB PolygonCollider::ComputeAABB() const
+    AABB PolygonCollider2D::ComputeAABB() const
     {
         const Vec2 bodyPosition = GetBody() ? GetBody()->GetPosition() : Vec2{};
         if (m_vertices.empty()) {

@@ -3,10 +3,10 @@
 #include "Collider2D.hpp"
 
 namespace BoltPhys {
-    class BOLT_PHYS_API BoxCollider final : public Collider2D
+    class BOLT_PHYS_API BoxCollider2D final : public Collider2D
     {
     public:
-        explicit BoxCollider(const Vec2& halfExtents);
+        explicit BoxCollider2D(const Vec2& halfExtents);
 
         const Vec2& GetHalfExtents() const noexcept;
         void SetHalfExtents(const Vec2& halfExtents) noexcept;
