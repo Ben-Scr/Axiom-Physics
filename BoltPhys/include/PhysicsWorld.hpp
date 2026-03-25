@@ -35,6 +35,7 @@ namespace BoltPhys {
         const std::vector<Contact>& GetContacts() const noexcept;
 
     private:
+        static WorldSettings SanitizeSettings(const WorldSettings& settings) noexcept;
         void IntegrateBodies(float dt);
         void ApplyWorldBounds(Body2D& body) const noexcept;
         void DetectCollisions();

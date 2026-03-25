@@ -12,7 +12,8 @@ namespace BoltPhys {
         SetBodyType(type); 
     }
 
-    void  Body2D::Destroy() {
+    void Body2D::Destroy() noexcept
+    {
         if (m_collider != nullptr) {
             m_collider->SetBody(nullptr);
             m_collider = nullptr;

@@ -12,10 +12,11 @@ namespace BoltPhys {
         PolygonCollider2D();
 
         void SetVertices(const Vec2* vertices, std::size_t count);
+        void SetVertices(std::vector<Vec2> vertices);
         std::size_t GetVertexCount() const noexcept;
         const Vec2* GetVertices() const noexcept;
 
-        AABB ComputeAABB() const override;
+        AABB ComputeAABB() const noexcept override;
 
     private:
         std::vector<Vec2> m_vertices;

@@ -156,7 +156,7 @@ namespace BoltPhys {
             return nullptr;
         }
 
-        static Contact s_contact{};
+        thread_local Contact s_contact{};
         s_contact = BuildAabbContact(colliderA, colliderB);
         return &s_contact;
     }

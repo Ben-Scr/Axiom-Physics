@@ -1,6 +1,6 @@
 # BoltPhys
 
-BoltPhys is a minimalist 2D physics module for C++ with a clear separation between `Body`, colliders, and a registration-based `PhysicsWorld`.
+BoltPhys is a minimalist 2D physics module for C++ with a clear separation between `Body2D`, colliders, and a registration-based `PhysicsWorld`.
 
 ## Build target
 BoltPhys is configured as a **static library** in all Visual Studio configurations (`Debug/Release` and `Win32/x64`).
@@ -10,8 +10,8 @@ BoltPhys is configured as a **static library** in all Visual Studio configuratio
 - API macro behavior: `BOLT_PHYS_API` becomes empty for static builds
 
 ## Architecture
-- **Body**: A single `Body` class with `BodyType` (`Static`, `Dynamic`, `Kinematic`).
-- **Colliders**: `BoxCollider`, `CircleCollider`, and `PolygonCollider` derive from `Collider`.
+- **Body**: A single `Body2D` class with `BodyType` (`Static`, `Dynamic`, `Kinematic`).
+- **Colliders**: `BoxCollider2D`, `CircleCollider`, and `PolygonCollider2D` derive from `Collider2D`.
 - **World**: `PhysicsWorld` stores global settings, registration logic, simulation step, and contacts.
 - **Utility Queries**: `Physics2D` provides overlap and point queries with and without a world context.
 
@@ -27,18 +27,18 @@ BoltPhys is configured as a **static library** in all Visual Studio configuratio
 ## Example
 ```cpp
 #include "PhysicsWorld.hpp"
-#include "Body.hpp"
-#include "BoxCollider.hpp"
+#include "Body2D.hpp"
+#include "BoxCollider2D.hpp"
 
 int main()
 {
     BoltPhys::PhysicsWorld world;
 
-    BoltPhys::Body player;
+    BoltPhys::Body2D player;
     player.SetBodyType(BoltPhys::BodyType::Dynamic);
     player.SetPosition({ 0.0f, 2.0f });
 
-    BoltPhys::BoxCollider playerCollider({ 0.5f, 1.0f });
+    BoltPhys::BoxCollider2D playerCollider({ 0.5f, 1.0f });
 
     world.RegisterBody(player);
     world.RegisterCollider(playerCollider);

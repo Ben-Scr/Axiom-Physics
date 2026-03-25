@@ -64,17 +64,61 @@ namespace BoltPhys {
             const std::uint64_t upper = static_cast<std::uint64_t>(std::max(indexA, indexB));
             return (lower << 32) | upper;
         }
+
+        float ComputeInverseMass(const Body2D& body) noexcept
+        {
+            const float mass = body.GetMass();
+            if (mass <= std::numeric_limits<float>::epsilon()) {
+                return 0.0f;
+            }
+
+            return 1.0f / mass;
+        }
+
+        void DetachBodyAndCollider(Body2D& body) noexcept
+        {
+            Collider2D* collider = body.GetCollider();
+            if (collider == nullptr) {
+                return;
+            }
+
+            collider->SetBody(nullptr);
+            body.AttachCollider(nullptr);
+        }
+
+        struct BodyCollisionData
+        {
+            Body2D* body = nullptr;
+            AABB aabb{};
+        };
     }
 
     PhysicsWorld::PhysicsWorld() = default;
 
     PhysicsWorld::PhysicsWorld(const WorldSettings& settings)
-        : m_settings(settings)
+        : m_settings(SanitizeSettings(settings))
     {}
+
+    WorldSettings PhysicsWorld::SanitizeSettings(const WorldSettings& settings) noexcept
+    {
+        WorldSettings sanitized = settings;
+
+        constexpr float kMinCellSize = 1e-3f;
+        sanitized.broadphaseCellSize = std::max(sanitized.broadphaseCellSize, kMinCellSize);
+
+        if (sanitized.worldMin.x > sanitized.worldMax.x) {
+            std::swap(sanitized.worldMin.x, sanitized.worldMax.x);
+        }
+        if (sanitized.worldMin.y > sanitized.worldMax.y) {
+            std::swap(sanitized.worldMin.y, sanitized.worldMax.y);
+        }
+
+        return sanitized;
+    }
 
     void PhysicsWorld::SetSettings(const WorldSettings& settings) noexcept
     {
-        m_settings = settings;
+        m_settings = SanitizeSettings(settings);
     }
 
     const WorldSettings& PhysicsWorld::GetSettings() const noexcept
@@ -104,8 +148,15 @@ namespace BoltPhys {
             return false;
         }
 
-        DetachCollider(body);
+        DetachBodyAndCollider(body);
         m_bodies.erase(it);
+
+        m_contacts.erase(
+            std::remove_if(m_contacts.begin(), m_contacts.end(), [&body](const Contact& contact) {
+                return contact.bodyA == &body || contact.bodyB == &body;
+                }),
+            m_contacts.end());
+
         return true;
     }
 
@@ -132,6 +183,14 @@ namespace BoltPhys {
         }
 
         m_colliders.erase(it);
+
+        m_contacts.erase(
+            std::remove_if(m_contacts.begin(), m_contacts.end(), [&collider](const Contact& contact) {
+                return (contact.bodyA != nullptr && contact.bodyA->GetCollider() == &collider) ||
+                    (contact.bodyB != nullptr && contact.bodyB->GetCollider() == &collider);
+                }),
+            m_contacts.end());
+
         return true;
     }
 
@@ -156,10 +215,7 @@ namespace BoltPhys {
 
     void PhysicsWorld::DetachCollider(Body2D& body)
     {
-        if (Collider2D* collider = body.GetCollider()) {
-            collider->SetBody(nullptr);
-            body.AttachCollider(nullptr);
-        }
+        DetachBodyAndCollider(body);
     }
 
     void PhysicsWorld::Step(float dt)
@@ -227,23 +283,29 @@ namespace BoltPhys {
     {
         m_contacts.clear();
 
-        const float cellSize = std::max(m_settings.broadphaseCellSize, 0.001f);
+        const float cellSize = m_settings.broadphaseCellSize;
 
-        std::unordered_map<CellCoord, std::vector<Body2D*>, CellCoordHasher> grid;
-        grid.reserve(m_bodies.size() * 2);
+        std::vector<BodyCollisionData> collisionBodies;
+        collisionBodies.reserve(m_bodies.size());
 
-        std::unordered_map<Body2D*, std::size_t> bodyIndices;
-        bodyIndices.reserve(m_bodies.size());
-
-        for (std::size_t i = 0; i < m_bodies.size(); ++i) {
-            Body2D* body = m_bodies[i];
-            if (body == nullptr || body->GetCollider() == nullptr) {
+        for (Body2D* body : m_bodies) {
+            if (body == nullptr) {
                 continue;
             }
 
-            bodyIndices[body] = i;
+            Collider2D* collider = body->GetCollider();
+            if (collider == nullptr) {
+                continue;
+            }
 
-            const AABB aabb = body->GetCollider()->ComputeAABB();
+            collisionBodies.push_back({ body, collider->ComputeAABB() });
+        }
+
+        std::unordered_map<CellCoord, std::vector<std::size_t>, CellCoordHasher> grid;
+        grid.reserve(collisionBodies.size() * 2);
+
+        for (std::size_t i = 0; i < collisionBodies.size(); ++i) {
+            const AABB& aabb = collisionBodies[i].aabb;
             const int minX = ComputeCellIndex(aabb.min.x, cellSize);
             const int maxX = ComputeCellIndex(aabb.max.x, cellSize);
             const int minY = ComputeCellIndex(aabb.min.y, cellSize);
@@ -251,46 +313,40 @@ namespace BoltPhys {
 
             for (int y = minY; y <= maxY; ++y) {
                 for (int x = minX; x <= maxX; ++x) {
-                    grid[{ x, y }].push_back(body);
+                    grid[{ x, y }].push_back(i);
                 }
             }
         }
 
         std::unordered_set<std::uint64_t> checkedPairs;
-        checkedPairs.reserve(m_bodies.size() * 2);
+        checkedPairs.reserve(collisionBodies.size() * 2);
 
         for (const auto& entry : grid) {
-            const std::vector<Body2D*>& cellBodies = entry.second;
-            if (cellBodies.size() < 2) {
+            const std::vector<std::size_t>& cellBodyIndices = entry.second;
+            if (cellBodyIndices.size() < 2) {
                 continue;
             }
 
-            for (std::size_t i = 0; i < cellBodies.size(); ++i) {
-                Body2D* bodyA = cellBodies[i];
-                if (bodyA == nullptr || bodyA->GetCollider() == nullptr) {
+            for (std::size_t i = 0; i < cellBodyIndices.size(); ++i) {
+                const std::size_t collisionIndexA = cellBodyIndices[i];
+                Body2D* bodyA = collisionBodies[collisionIndexA].body;
+                if (bodyA == nullptr) {
                     continue;
                 }
 
-                for (std::size_t j = i + 1; j < cellBodies.size(); ++j) {
-                    Body2D* bodyB = cellBodies[j];
-                    if (bodyB == nullptr || bodyB->GetCollider() == nullptr || bodyA == bodyB) {
+                for (std::size_t j = i + 1; j < cellBodyIndices.size(); ++j) {
+                    const std::size_t collisionIndexB = cellBodyIndices[j];
+                    Body2D* bodyB = collisionBodies[collisionIndexB].body;
+                    if (bodyB == nullptr || bodyA == bodyB) {
                         continue;
                     }
 
-                    const auto indexA = bodyIndices.find(bodyA);
-                    const auto indexB = bodyIndices.find(bodyB);
-                    if (indexA == bodyIndices.end() || indexB == bodyIndices.end()) {
-                        continue;
-                    }
-
-                    const std::uint64_t pairKey = MakePairKey(indexA->second, indexB->second);
+                    const std::uint64_t pairKey = MakePairKey(collisionIndexA, collisionIndexB);
                     if (!checkedPairs.insert(pairKey).second) {
                         continue;
                     }
 
-                    const AABB aabbA = bodyA->GetCollider()->ComputeAABB();
-                    const AABB aabbB = bodyB->GetCollider()->ComputeAABB();
-                    if (!aabbA.Intersects(aabbB)) {
+                    if (!collisionBodies[collisionIndexA].aabb.Intersects(collisionBodies[collisionIndexB].aabb)) {
                         continue;
                     }
 
@@ -316,8 +372,8 @@ namespace BoltPhys {
                 continue;
             }
 
-            const float invMassA = moveA ? (1.0f / bodyA->GetMass()) : 0.0f;
-            const float invMassB = moveB ? (1.0f / bodyB->GetMass()) : 0.0f;
+            const float invMassA = moveA ? ComputeInverseMass(*bodyA) : 0.0f;
+            const float invMassB = moveB ? ComputeInverseMass(*bodyB) : 0.0f;
             const float invMassSum = invMassA + invMassB;
             if (invMassSum <= 0.0f) {
                 continue;
@@ -354,15 +410,27 @@ namespace BoltPhys {
 
     Contact PhysicsWorld::BuildContact(Body2D& bodyA, Body2D& bodyB) const
     {
-        const AABB aabbA = bodyA.GetCollider()->ComputeAABB();
-        const AABB aabbB = bodyB.GetCollider()->ComputeAABB();
-
-        const float overlapX = std::min(aabbA.max.x, aabbB.max.x) - std::max(aabbA.min.x, aabbB.min.x);
-        const float overlapY = std::min(aabbA.max.y, aabbB.max.y) - std::max(aabbA.min.y, aabbB.min.y);
+        Collider2D* colliderA = bodyA.GetCollider();
+        Collider2D* colliderB = bodyB.GetCollider();
 
         Contact contact{};
         contact.bodyA = &bodyA;
         contact.bodyB = &bodyB;
+
+        if (colliderA == nullptr || colliderB == nullptr) {
+            return contact;
+        }
+
+        const AABB aabbA = colliderA->ComputeAABB();
+        const AABB aabbB = colliderB->ComputeAABB();
+
+        const float overlapX = std::min(aabbA.max.x, aabbB.max.x) - std::max(aabbA.min.x, aabbB.min.x);
+        const float overlapY = std::min(aabbA.max.y, aabbB.max.y) - std::max(aabbA.min.y, aabbB.min.y);
+
+        if (overlapX <= 0.0f || overlapY <= 0.0f) {
+            return contact;
+        }
+
         contact.penetration = std::min(overlapX, overlapY);
 
         const Vec2 delta = bodyB.GetPosition() - bodyA.GetPosition();

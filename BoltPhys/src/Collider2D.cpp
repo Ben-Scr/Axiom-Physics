@@ -4,10 +4,10 @@
 namespace BoltPhys {
     Collider2D::Collider2D(ColliderType type) noexcept
         : m_type(type)
-    {
-    }
+    {}
 
-    void Collider2D::Destroy() {
+    void Collider2D::Destroy() noexcept
+    {
         if (m_body != nullptr) {
             m_body->AttachCollider(nullptr);
             m_body = nullptr;

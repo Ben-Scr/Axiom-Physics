@@ -1,13 +1,15 @@
 #include "CircleCollider.hpp"
-
 #include "Body2D.hpp"
 
 namespace BoltPhys {
+    namespace {
+        constexpr float kDefaultRadius = 0.5f;
+    }
+
     CircleCollider::CircleCollider(float radius)
         : Collider2D(ColliderType::Circle),
-        m_radius(radius > 0.0f ? radius : 0.5f)
-    {
-    }
+        m_radius(radius > 0.0f ? radius : kDefaultRadius)
+    {}
 
     float CircleCollider::GetRadius() const noexcept
     {
@@ -16,10 +18,10 @@ namespace BoltPhys {
 
     void CircleCollider::SetRadius(float radius)
     {
-        m_radius = radius > 0.0f ? radius : 0.5f;
+        m_radius = radius > 0.0f ? radius : kDefaultRadius;
     }
 
-    AABB CircleCollider::ComputeAABB() const
+    AABB CircleCollider::ComputeAABB() const noexcept
     {
         const Vec2 center = GetBody() ? GetBody()->GetPosition() : Vec2{};
         const Vec2 extents{ m_radius, m_radius };

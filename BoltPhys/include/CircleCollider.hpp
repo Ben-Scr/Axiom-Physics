@@ -11,7 +11,7 @@ namespace BoltPhys {
         float GetRadius() const noexcept;
         void SetRadius(float radius);
 
-        AABB ComputeAABB() const override;
+        AABB ComputeAABB() const noexcept override;
 
     private:
         float m_radius = 0.5f;

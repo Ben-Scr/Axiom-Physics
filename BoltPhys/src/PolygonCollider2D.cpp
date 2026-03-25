@@ -4,21 +4,35 @@
 
 #include <algorithm>
 #include <limits>
+#include <utility>
 
 namespace BoltPhys {
+    namespace {
+        constexpr std::size_t kMinPolygonVertices = 3;
+    }
+
     PolygonCollider2D::PolygonCollider2D()
         : Collider2D(ColliderType::Polygon)
-    {
-    }
+    {}
 
     void PolygonCollider2D::SetVertices(const Vec2* vertices, std::size_t count)
     {
         m_vertices.clear();
-        if (vertices == nullptr || count == 0) {
+        if (vertices == nullptr || count < kMinPolygonVertices) {
             return;
         }
 
         m_vertices.assign(vertices, vertices + count);
+    }
+
+    void PolygonCollider2D::SetVertices(std::vector<Vec2> vertices)
+    {
+        if (vertices.size() < kMinPolygonVertices) {
+            m_vertices.clear();
+            return;
+        }
+
+        m_vertices = std::move(vertices);
     }
 
     std::size_t PolygonCollider2D::GetVertexCount() const noexcept
@@ -31,7 +45,7 @@ namespace BoltPhys {
         return m_vertices.empty() ? nullptr : m_vertices.data();
     }
 
-    AABB PolygonCollider2D::ComputeAABB() const
+    AABB PolygonCollider2D::ComputeAABB() const noexcept
     {
         const Vec2 bodyPosition = GetBody() ? GetBody()->GetPosition() : Vec2{};
         if (m_vertices.empty()) {
