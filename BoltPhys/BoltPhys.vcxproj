@@ -22,6 +22,7 @@
     <ClInclude Include="include\AABB.hpp" />
     <ClInclude Include="include\Body.hpp" />
     <ClInclude Include="include\BodyType.hpp" />
+    <ClInclude Include="include\BoltPhys.hpp" />
     <ClInclude Include="include\BoxCollider.hpp" />
     <ClInclude Include="include\CircleCollider.hpp" />
     <ClInclude Include="include\Collider.hpp" />
