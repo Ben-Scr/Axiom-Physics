@@ -11,7 +11,8 @@ namespace BoltPhys {
     public:
         Body2D() noexcept;
         explicit Body2D(BodyType type) noexcept;
-        ~Body2D();
+        ~Body2D() = default;
+        void Destroy();
 
         BodyType GetBodyType() const noexcept;
         void SetBodyType(BodyType type) noexcept;

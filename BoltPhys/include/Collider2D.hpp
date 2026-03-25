@@ -9,7 +9,8 @@ namespace BoltPhys {
     class BOLT_PHYS_API Collider2D
     {
     public:
-        virtual ~Collider2D();
+        ~Collider2D() = default;
+        virtual void Destroy();
 
         ColliderType GetType() const noexcept;
 
