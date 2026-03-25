@@ -1,4 +1,4 @@
-#include "PhysicsWorld.hpp"
+#include "PhysicsWorld2D.hpp"
 
 int main()
 {
