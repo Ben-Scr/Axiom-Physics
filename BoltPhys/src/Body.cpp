@@ -2,9 +2,9 @@
 #include "Collider.hpp"
 
 namespace BoltPhys {
-    Body::Body(BodyType type) noexcept
-        : m_type(type)
+    Body::Body() noexcept
     {
+        SetBodyType(BodyType::Dynamic);
     }
 
     Body::~Body()
@@ -15,9 +15,32 @@ namespace BoltPhys {
         }
     }
 
-    BodyType Body::GetType() const noexcept
+    BodyType Body::GetBodyType() const noexcept
     {
-        return m_type;
+        return m_bodyType;
+    }
+
+    void Body::SetBodyType(BodyType type) noexcept
+    {
+        m_bodyType = type;
+
+        switch (m_bodyType) {
+        case BodyType::Static:
+            SetGravityEnabled(false);
+            SetBoundaryCheckEnabled(false);
+            SetVelocity({ 0.0f, 0.0f });
+            break;
+        case BodyType::Kinematic:
+            SetGravityEnabled(false);
+            SetBoundaryCheckEnabled(true);
+            break;
+        case BodyType::Dynamic:
+            SetGravityEnabled(true);
+            SetBoundaryCheckEnabled(true);
+            break;
+        default:
+            break;
+        }
     }
 
     const Vec2& Body::GetPosition() const noexcept

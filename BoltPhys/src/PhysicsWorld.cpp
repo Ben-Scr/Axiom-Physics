@@ -155,11 +155,11 @@ namespace BoltPhys {
     void PhysicsWorld::IntegrateBodies(float dt)
     {
         for (Body* body : m_bodies) {
-            if (body == nullptr || body->GetType() == BodyType::Static) {
+            if (body == nullptr || body->GetBodyType() == BodyType::Static) {
                 continue;
             }
 
-            if (body->GetType() == BodyType::Dynamic && body->IsGravityEnabled()) {
+            if (body->GetBodyType() == BodyType::Dynamic && body->IsGravityEnabled()) {
                 body->SetVelocity(body->GetVelocity() + (m_settings.gravity * dt));
             }
 
@@ -223,8 +223,9 @@ namespace BoltPhys {
                 continue;
             }
 
-            const bool moveA = bodyA->GetType() == BodyType::Dynamic;
-            const bool moveB = bodyB->GetType() == BodyType::Dynamic;
+            const bool moveA = bodyA->GetBodyType() == BodyType::Dynamic;
+            const bool moveB = bodyB->GetBodyType() == BodyType::Dynamic;
+
             if (!moveA && !moveB) {
                 continue;
             }
