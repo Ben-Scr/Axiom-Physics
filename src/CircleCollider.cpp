@@ -1,5 +1,5 @@
 #include "CircleCollider.hpp"
-#include "Body2D.hpp"
+#include "Body.hpp"
 
 namespace BoltPhys {
     namespace {

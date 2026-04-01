@@ -1,5 +1,5 @@
-#include "BoxCollider2D.hpp"
-#include "Body2D.hpp"
+#include "BoxCollider.hpp"
+#include "Body.hpp"
 
 #include <algorithm>
 #include <cmath>

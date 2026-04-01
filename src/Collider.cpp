@@ -1,5 +1,5 @@
-#include "Collider2D.hpp"
-#include "Body2D.hpp"
+#include "Collider.hpp"
+#include "Body.hpp"
 
 namespace BoltPhys {
     Collider::Collider(ColliderType type) noexcept

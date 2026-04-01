@@ -1,6 +1,6 @@
-#include "PolygonCollider2D.hpp"
+#include "PolygonCollider.hpp"
 
-#include "Body2D.hpp"
+#include "Body.hpp"
 
 #include <algorithm>
 #include <limits>
