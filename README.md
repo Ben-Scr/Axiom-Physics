@@ -1,13 +1,13 @@
-# Bolt-Physics
+# Axiom-Physics
 
-Bolt-Physics2D is a minimalist 2D physics module for C++ with a clear separation between `Body2D`, colliders, and a registration-based `PhysicsWorld`.
+Axiom-Physics is a minimalist 2D physics module for C++ with a clear separation between `Body2D`, colliders, and a registration-based `PhysicsWorld`.
 
 ## Build target
-Bolt-Physics2D is configured as a **static library** in all Visual Studio configurations (`Debug/Release` and `Win32/x64`).
+Axiom-Physics is configured as a **static library** in all Visual Studio configurations (`Debug/Release` and `Win32/x64`).
 
 - Project output type: `StaticLibrary`
-- Preprocessor define: `BT_STATIC`
-- API macro behavior: `BOLT_PHYS_API` becomes empty for static builds
+- Preprocessor define: `AIM_STATIC`
+- API macro behavior: `AXIOM_PHYS_API` becomes empty for static builds
 
 ## Architecture
 - **Body**: A single `Body2D` class with `BodyType` (`Static`, `Dynamic`, `Kinematic`).
