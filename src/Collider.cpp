@@ -9,7 +9,7 @@ namespace AxiomPhys {
     void Collider::Destroy() noexcept
     {
         if (m_body != nullptr) {
-            m_body->AttachCollider(nullptr);
+            m_body->SetCollider(nullptr);
             m_body = nullptr;
         }
     }

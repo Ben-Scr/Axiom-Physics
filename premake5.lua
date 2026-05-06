@@ -3,7 +3,7 @@
 
 workspace "Axiom-Physics"
     architecture "x86_64"
-    startproject "Axiom-Physics"
+    startproject "Tests"
 
     configurations
     {
@@ -26,6 +26,7 @@ project "Axiom-Physics"
     cppdialect "C++latest"
     cdialect "C17"
     staticruntime "off"
+    warnings "Extra"
 
     targetdir ("bin/" .. outputdir .. "/%{prj.name}")
     objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
@@ -43,6 +44,59 @@ project "Axiom-Physics"
     {
         "include",
         "external/include"
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+        defines { "_CRT_SECURE_NO_WARNINGS" }
+
+    filter "configurations:Debug"
+        defines { "AXIOM_PHYS_DEBUG", "_DEBUG" }
+        runtime "Debug"
+        symbols "on"
+        optimize "off"
+
+    filter "configurations:Release"
+        defines { "AXIOM_PHYS_RELEASE", "NDEBUG" }
+        runtime "Release"
+        symbols "on"
+        optimize "on"
+
+    filter "configurations:Dist"
+        defines { "AXIOM_PHYS_DIST", "NDEBUG" }
+        runtime "Release"
+        symbols "off"
+        optimize "full"
+
+project "Tests"
+    location "tests"
+    kind "ConsoleApp"
+    language "C++"
+    cppdialect "C++latest"
+    cdialect "C17"
+    staticruntime "off"
+    warnings "Extra"
+
+    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+    objdir    ("bin-int/" .. outputdir .. "/%{prj.name}")
+
+    files
+    {
+        "tests/**.cpp",
+        "tests/**.hpp",
+        "tests/**.h"
+    }
+
+    includedirs
+    {
+        "include",
+        "external/include",
+        "tests"
+    }
+
+    links
+    {
+        "Axiom-Physics"
     }
 
     filter "system:windows"

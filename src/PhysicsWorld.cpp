@@ -1,4 +1,5 @@
 #include "PhysicsWorld.hpp"
+#include "Physics2D.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -67,7 +68,6 @@ namespace AxiomPhys {
             if (mass <= std::numeric_limits<float>::epsilon()) {
                 return 0.0f;
             }
-
             return 1.0f / mass;
         }
 
@@ -77,14 +77,14 @@ namespace AxiomPhys {
             if (collider == nullptr) {
                 return;
             }
-
             collider->SetBody(nullptr);
-            body.AttachCollider(nullptr);
+            body.SetCollider(nullptr);
         }
 
         struct BodyCollisionData
         {
             Body* body = nullptr;
+            Collider* collider = nullptr;
             AABB aabb{};
         };
     }
@@ -122,6 +122,11 @@ namespace AxiomPhys {
         return m_settings;
     }
 
+    const std::vector<Body*>& PhysicsWorld::GetBodies() const noexcept
+    {
+        return m_bodies;
+    }
+
     const std::vector<Collider*>& PhysicsWorld::GetColliders() const noexcept
     {
         return m_colliders;
@@ -132,7 +137,6 @@ namespace AxiomPhys {
         if (Contains(m_bodies, body)) {
             return false;
         }
-
         m_bodies.push_back(&body);
         return true;
     }
@@ -161,7 +165,6 @@ namespace AxiomPhys {
         if (Contains(m_colliders, collider)) {
             return false;
         }
-
         m_colliders.push_back(&collider);
         return true;
     }
@@ -174,7 +177,7 @@ namespace AxiomPhys {
         }
 
         if (Body* body = collider.GetBody()) {
-            body->AttachCollider(nullptr);
+            body->SetCollider(nullptr);
             collider.SetBody(nullptr);
         }
 
@@ -182,8 +185,7 @@ namespace AxiomPhys {
 
         m_contacts.erase(
             std::remove_if(m_contacts.begin(), m_contacts.end(), [&collider](const Contact& contact) {
-                return (contact.bodyA != nullptr && contact.bodyA->GetCollider() == &collider) ||
-                    (contact.bodyB != nullptr && contact.bodyB->GetCollider() == &collider);
+                return contact.colliderA == &collider || contact.colliderB == &collider;
                 }),
             m_contacts.end());
 
@@ -196,15 +198,15 @@ namespace AxiomPhys {
             return false;
         }
 
-        if (collider.GetBody() != nullptr && collider.GetBody() != &body) {
-            return false;
+        // Sever any prior partners so we never leave half-attached state.
+        if (Body* existing = collider.GetBody(); existing != nullptr && existing != &body) {
+            existing->SetCollider(nullptr);
+        }
+        if (Collider* existing = body.GetCollider(); existing != nullptr && existing != &collider) {
+            existing->SetBody(nullptr);
         }
 
-        if (body.GetCollider() != nullptr && body.GetCollider() != &collider) {
-            body.GetCollider()->SetBody(nullptr);
-        }
-
-        body.AttachCollider(&collider);
+        body.SetCollider(&collider);
         collider.SetBody(&body);
         return true;
     }
@@ -294,7 +296,7 @@ namespace AxiomPhys {
                 continue;
             }
 
-            collisionBodies.push_back({ body, collider->ComputeAABB() });
+            collisionBodies.push_back({ body, collider, collider->ComputeAABB() });
         }
 
         std::unordered_map<CellCoord, std::vector<std::size_t>, CellCoordHasher> grid;
@@ -324,29 +326,29 @@ namespace AxiomPhys {
             }
 
             for (std::size_t i = 0; i < cellBodyIndices.size(); ++i) {
-                const std::size_t collisionIndexA = cellBodyIndices[i];
-                Body* bodyA = collisionBodies[collisionIndexA].body;
-                if (bodyA == nullptr) {
-                    continue;
-                }
+                const std::size_t indexA = cellBodyIndices[i];
 
                 for (std::size_t j = i + 1; j < cellBodyIndices.size(); ++j) {
-                    const std::size_t collisionIndexB = cellBodyIndices[j];
-                    Body* bodyB = collisionBodies[collisionIndexB].body;
-                    if (bodyB == nullptr || bodyA == bodyB) {
-                        continue;
-                    }
+                    const std::size_t indexB = cellBodyIndices[j];
 
-                    const std::uint64_t pairKey = MakePairKey(collisionIndexA, collisionIndexB);
+                    const std::uint64_t pairKey = MakePairKey(indexA, indexB);
                     if (!checkedPairs.insert(pairKey).second) {
                         continue;
                     }
 
-                    if (!collisionBodies[collisionIndexA].aabb.Intersects(collisionBodies[collisionIndexB].aabb)) {
+                    if (!collisionBodies[indexA].aabb.Intersects(collisionBodies[indexB].aabb)) {
                         continue;
                     }
 
-                    m_contacts.push_back(BuildContact(*bodyA, *bodyB));
+                    Collider* colliderA = collisionBodies[indexA].collider;
+                    Collider* colliderB = collisionBodies[indexB].collider;
+                    if (colliderA == nullptr || colliderB == nullptr) {
+                        continue;
+                    }
+
+                    if (auto contact = Physics2D::OverlapsWith(*colliderA, *colliderB)) {
+                        m_contacts.push_back(*contact);
+                    }
                 }
             }
         }
@@ -363,7 +365,6 @@ namespace AxiomPhys {
 
             const bool moveA = bodyA->GetBodyType() == BodyType::Dynamic;
             const bool moveB = bodyB->GetBodyType() == BodyType::Dynamic;
-
             if (!moveA && !moveB) {
                 continue;
             }
@@ -375,68 +376,34 @@ namespace AxiomPhys {
                 continue;
             }
 
+            // Positional correction: push the bodies apart along the contact normal.
             const Vec2 correction = contact.normal * contact.penetration;
             if (moveA) {
-                const float ratioA = invMassA / invMassSum;
-                bodyA->SetPosition(bodyA->GetPosition() - (correction * ratioA));
+                bodyA->SetPosition(bodyA->GetPosition() - (correction * (invMassA / invMassSum)));
             }
             if (moveB) {
-                const float ratioB = invMassB / invMassSum;
-                bodyB->SetPosition(bodyB->GetPosition() + (correction * ratioB));
+                bodyB->SetPosition(bodyB->GetPosition() + (correction * (invMassB / invMassSum)));
             }
+
+            // Velocity response with restitution. Bodies separate if they were
+            // approaching along the contact normal; otherwise leave velocities
+            // alone (they were already separating).
+            const Vec2 relativeVelocity = bodyB->GetVelocity() - bodyA->GetVelocity();
+            const float velocityAlongNormal = Dot(relativeVelocity, contact.normal);
+            if (velocityAlongNormal >= 0.0f) {
+                continue;
+            }
+
+            const float restitution = std::min(bodyA->GetRestitution(), bodyB->GetRestitution());
+            const float impulseMagnitude = -(1.0f + restitution) * velocityAlongNormal / invMassSum;
+            const Vec2 impulse = contact.normal * impulseMagnitude;
 
             if (moveA) {
-                Vec2 velocityA = bodyA->GetVelocity();
-                const float normalVelocityA = Dot(velocityA, contact.normal);
-                if (normalVelocityA > 0.0f) {
-                    velocityA -= contact.normal * normalVelocityA;
-                    bodyA->SetVelocity(velocityA);
-                }
+                bodyA->SetVelocity(bodyA->GetVelocity() - (impulse * invMassA));
             }
             if (moveB) {
-                Vec2 velocityB = bodyB->GetVelocity();
-                const float normalVelocityB = Dot(velocityB, contact.normal);
-                if (normalVelocityB < 0.0f) {
-                    velocityB -= contact.normal * normalVelocityB;
-                    bodyB->SetVelocity(velocityB);
-                }
+                bodyB->SetVelocity(bodyB->GetVelocity() + (impulse * invMassB));
             }
         }
-    }
-
-    Contact PhysicsWorld::BuildContact(Body& bodyA, Body& bodyB) const
-    {
-        Collider* colliderA = bodyA.GetCollider();
-        Collider* colliderB = bodyB.GetCollider();
-
-        Contact contact{};
-        contact.bodyA = &bodyA;
-        contact.bodyB = &bodyB;
-
-        if (colliderA == nullptr || colliderB == nullptr) {
-            return contact;
-        }
-
-        const AABB aabbA = colliderA->ComputeAABB();
-        const AABB aabbB = colliderB->ComputeAABB();
-
-        const float overlapX = std::min(aabbA.max.x, aabbB.max.x) - std::max(aabbA.min.x, aabbB.min.x);
-        const float overlapY = std::min(aabbA.max.y, aabbB.max.y) - std::max(aabbA.min.y, aabbB.min.y);
-
-        if (overlapX <= 0.0f || overlapY <= 0.0f) {
-            return contact;
-        }
-
-        contact.penetration = std::min(overlapX, overlapY);
-
-        const Vec2 delta = bodyB.GetPosition() - bodyA.GetPosition();
-        if (overlapX < overlapY) {
-            contact.normal = { delta.x >= 0.0f ? 1.0f : -1.0f, 0.0f };
-        }
-        else {
-            contact.normal = { 0.0f, delta.y >= 0.0f ? 1.0f : -1.0f };
-        }
-
-        return contact;
     }
 }

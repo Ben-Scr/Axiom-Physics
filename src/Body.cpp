@@ -1,6 +1,8 @@
 #include "Body.hpp"
 #include "Collider.hpp"
 
+#include <algorithm>
+
 namespace AxiomPhys {
     Body::Body() noexcept
     {
@@ -9,7 +11,7 @@ namespace AxiomPhys {
 
     Body::Body(BodyType type) noexcept
     {
-        SetBodyType(type); 
+        SetBodyType(type);
     }
 
     void Body::Destroy() noexcept
@@ -42,8 +44,6 @@ namespace AxiomPhys {
         case BodyType::Dynamic:
             SetGravityEnabled(true);
             SetBoundaryCheckEnabled(true);
-            break;
-        default:
             break;
         }
     }
@@ -78,6 +78,16 @@ namespace AxiomPhys {
         m_mass = mass > 0.0f ? mass : 1.0f;
     }
 
+    float Body::GetRestitution() const noexcept
+    {
+        return m_restitution;
+    }
+
+    void Body::SetRestitution(float restitution) noexcept
+    {
+        m_restitution = std::clamp(restitution, 0.0f, 1.0f);
+    }
+
     bool Body::IsBoundaryCheckEnabled() const noexcept
     {
         return m_boundaryCheckEnabled;
@@ -108,7 +118,7 @@ namespace AxiomPhys {
         return m_collider;
     }
 
-    void Body::AttachCollider(Collider* collider) noexcept
+    void Body::SetCollider(Collider* collider) noexcept
     {
         m_collider = collider;
     }

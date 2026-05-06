@@ -23,6 +23,9 @@ namespace AxiomPhys {
         bool RegisterCollider(Collider& collider);
         bool UnregisterCollider(Collider& collider);
 
+        // Pairs a registered body with a registered collider, keeping both
+        // back-pointers in sync. If the body or collider is currently attached
+        // to a different partner, the previous pairing is severed first.
         bool AttachCollider(Body& body, Collider& collider);
         void DetachCollider(Body& body);
 
@@ -30,6 +33,7 @@ namespace AxiomPhys {
 
         std::size_t GetBodyCount() const noexcept;
         std::size_t GetColliderCount() const noexcept;
+        const std::vector<Body*>& GetBodies() const noexcept;
         const std::vector<Collider*>& GetColliders() const noexcept;
         const std::vector<Contact>& GetContacts() const noexcept;
 
@@ -39,8 +43,6 @@ namespace AxiomPhys {
         void ApplyWorldBounds(Body& body) const noexcept;
         void DetectCollisions();
         void ResolveContacts();
-
-        Contact BuildContact(Body& bodyA, Body& bodyB) const;
 
         WorldSettings m_settings;
         std::vector<Body*> m_bodies;

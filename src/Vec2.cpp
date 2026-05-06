@@ -9,6 +9,11 @@ namespace AxiomPhys {
         return std::sqrt(LengthSq(v));
     }
 
+    float Distance(const Vec2& a, const Vec2& b) noexcept
+    {
+        return std::sqrt(DistanceSq(a, b));
+    }
+
     Vec2 Normalize(const Vec2& v) noexcept
     {
         const float length = Length(v);

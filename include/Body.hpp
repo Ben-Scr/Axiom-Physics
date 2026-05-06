@@ -26,6 +26,10 @@ namespace AxiomPhys {
         float GetMass() const noexcept;
         void SetMass(float mass) noexcept;
 
+        // Bounciness in [0, 1]. 0 = fully inelastic (no bounce), 1 = perfectly elastic.
+        float GetRestitution() const noexcept;
+        void SetRestitution(float restitution) noexcept;
+
         bool IsBoundaryCheckEnabled() const noexcept;
         void SetBoundaryCheckEnabled(bool enabled) noexcept;
 
@@ -34,13 +38,17 @@ namespace AxiomPhys {
 
         Collider* GetCollider() noexcept;
         const Collider* GetCollider() const noexcept;
-        void AttachCollider(Collider* collider) noexcept;
+
+        // Raw setter — does not update the collider's back-pointer. Prefer
+        // PhysicsWorld::AttachCollider, which keeps both sides in sync.
+        void SetCollider(Collider* collider) noexcept;
 
     private:
         BodyType m_bodyType = BodyType::Dynamic;
-        Vec2 m_position{};
-        Vec2 m_velocity{};
+        Vec2 m_position{ 0.0f, 0.0f };
+        Vec2 m_velocity{ 0.0f, 0.0f };
         float m_mass = 1.0f;
+        float m_restitution = 0.0f;
         bool m_boundaryCheckEnabled = true;
         bool m_gravityEnabled = true;
         Collider* m_collider = nullptr;

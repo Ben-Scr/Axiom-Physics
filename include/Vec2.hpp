@@ -14,6 +14,13 @@ namespace AxiomPhys {
         return Dot(v, v);
     }
 
+    constexpr float DistanceSq(const Vec2& a, const Vec2& b) noexcept
+    {
+        const Vec2 d{ a.x - b.x, a.y - b.y };
+        return Dot(d, d);
+    }
+
     float Length(const Vec2& v) noexcept;
+    float Distance(const Vec2& a, const Vec2& b) noexcept;
     Vec2 Normalize(const Vec2& v) noexcept;
 }
