@@ -24,8 +24,8 @@ namespace AxiomPhys {
         static std::optional<Contact> OverlapsWith(Collider& collider);
 
         // Pair test. Returns nullopt if the two colliders do not overlap.
-        // Performs a precise narrowphase for circle/circle and circle/box; falls
-        // back to AABB-vs-AABB for polygons.
+        // Performs precise narrowphase for circle/circle, circle/box, box/box,
+        // and convex polygon pairs.
         static std::optional<Contact> OverlapsWith(Collider& colliderA, Collider& colliderB);
 
         // Returns the first collider in the active world whose shape contains the

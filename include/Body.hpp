@@ -30,6 +30,11 @@ namespace AxiomPhys {
         float GetRestitution() const noexcept;
         void SetRestitution(float restitution) noexcept;
 
+        // Coulomb friction coefficient in [0, 1]. The contact friction is the
+        // geometric mean of the two participating bodies' coefficients.
+        float GetFriction() const noexcept;
+        void SetFriction(float friction) noexcept;
+
         bool IsBoundaryCheckEnabled() const noexcept;
         void SetBoundaryCheckEnabled(bool enabled) noexcept;
 
@@ -49,6 +54,7 @@ namespace AxiomPhys {
         Vec2 m_velocity{ 0.0f, 0.0f };
         float m_mass = 1.0f;
         float m_restitution = 0.0f;
+        float m_friction = 0.3f;
         bool m_boundaryCheckEnabled = true;
         bool m_gravityEnabled = true;
         Collider* m_collider = nullptr;

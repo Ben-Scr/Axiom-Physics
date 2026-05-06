@@ -9,6 +9,9 @@ namespace AxiomPhys {
         Vec2 worldMin{ -1000.0f, -1000.0f };
         Vec2 worldMax{ 1000.0f,  1000.0f };
         float broadphaseCellSize = 5.0f;
+        // How many velocity-solver passes to run per Step. Higher values
+        // reduce jitter in stacks at the cost of CPU. Clamped to >= 1.
+        int solverIterations = 8;
         bool enableWorldBounds = false;
     };
 }

@@ -46,6 +46,16 @@ AXIOM_TEST_CASE(Body_RestitutionClamped)
     EXPECT_NEAR(body.GetRestitution(), 0.5f, 1e-6);
 }
 
+AXIOM_TEST_CASE(Body_FrictionClamped)
+{
+    Body body;
+    EXPECT_NEAR(body.GetFriction(), 0.3f, 1e-6); // default
+    body.SetFriction(2.0f);
+    EXPECT_NEAR(body.GetFriction(), 1.0f, 1e-6);
+    body.SetFriction(-1.0f);
+    EXPECT_NEAR(body.GetFriction(), 0.0f, 1e-6);
+}
+
 AXIOM_TEST_CASE(Body_MassClampsToOneOnInvalid)
 {
     Body body;

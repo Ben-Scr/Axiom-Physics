@@ -10,6 +10,8 @@ namespace AxiomPhys {
     public:
         PolygonCollider();
 
+        // Vertices are interpreted as a local-space convex polygon. Collision
+        // queries use SAT and do not support concave polygons.
         void SetVertices(const Vec2* vertices, std::size_t count);
         void SetVertices(std::vector<Vec2> vertices);
         std::size_t GetVertexCount() const noexcept;

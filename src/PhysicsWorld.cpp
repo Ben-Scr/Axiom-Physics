@@ -101,6 +101,7 @@ namespace AxiomPhys {
 
         constexpr float kMinCellSize = 1e-3f;
         sanitized.broadphaseCellSize = std::max(sanitized.broadphaseCellSize, kMinCellSize);
+        sanitized.solverIterations = std::max(1, sanitized.solverIterations);
 
         if (sanitized.worldMin.x > sanitized.worldMax.x) {
             std::swap(sanitized.worldMin.x, sanitized.worldMax.x);
@@ -356,6 +357,9 @@ namespace AxiomPhys {
 
     void PhysicsWorld::ResolveContacts()
     {
+        // Positional correction: applied once. Each contact's penetration is the
+        // amount measured at the start of the frame; running this in a loop with
+        // stale data would over-correct.
         for (const Contact& contact : m_contacts) {
             Body* bodyA = contact.bodyA;
             Body* bodyB = contact.bodyB;
@@ -376,7 +380,6 @@ namespace AxiomPhys {
                 continue;
             }
 
-            // Positional correction: push the bodies apart along the contact normal.
             const Vec2 correction = contact.normal * contact.penetration;
             if (moveA) {
                 bodyA->SetPosition(bodyA->GetPosition() - (correction * (invMassA / invMassSum)));
@@ -384,25 +387,62 @@ namespace AxiomPhys {
             if (moveB) {
                 bodyB->SetPosition(bodyB->GetPosition() + (correction * (invMassB / invMassSum)));
             }
+        }
 
-            // Velocity response with restitution. Bodies separate if they were
-            // approaching along the contact normal; otherwise leave velocities
-            // alone (they were already separating).
-            const Vec2 relativeVelocity = bodyB->GetVelocity() - bodyA->GetVelocity();
-            const float velocityAlongNormal = Dot(relativeVelocity, contact.normal);
-            if (velocityAlongNormal >= 0.0f) {
-                continue;
-            }
+        // Velocity solver: looped to converge in stacks. Each iteration applies
+        // a normal impulse (with restitution) plus a tangential impulse clamped
+        // by Coulomb friction.
+        const int iterations = std::max(1, m_settings.solverIterations);
+        for (int it = 0; it < iterations; ++it) {
+            for (const Contact& contact : m_contacts) {
+                Body* bodyA = contact.bodyA;
+                Body* bodyB = contact.bodyB;
+                if (bodyA == nullptr || bodyB == nullptr) {
+                    continue;
+                }
 
-            const float restitution = std::min(bodyA->GetRestitution(), bodyB->GetRestitution());
-            const float impulseMagnitude = -(1.0f + restitution) * velocityAlongNormal / invMassSum;
-            const Vec2 impulse = contact.normal * impulseMagnitude;
+                const bool moveA = bodyA->GetBodyType() == BodyType::Dynamic;
+                const bool moveB = bodyB->GetBodyType() == BodyType::Dynamic;
+                if (!moveA && !moveB) {
+                    continue;
+                }
 
-            if (moveA) {
-                bodyA->SetVelocity(bodyA->GetVelocity() - (impulse * invMassA));
-            }
-            if (moveB) {
-                bodyB->SetVelocity(bodyB->GetVelocity() + (impulse * invMassB));
+                const float invMassA = moveA ? ComputeInverseMass(*bodyA) : 0.0f;
+                const float invMassB = moveB ? ComputeInverseMass(*bodyB) : 0.0f;
+                const float invMassSum = invMassA + invMassB;
+                if (invMassSum <= 0.0f) {
+                    continue;
+                }
+
+                const Vec2 relativeVelocity = bodyB->GetVelocity() - bodyA->GetVelocity();
+                const float velocityAlongNormal = Dot(relativeVelocity, contact.normal);
+                if (velocityAlongNormal >= 0.0f) {
+                    continue;
+                }
+
+                // Normal impulse with restitution.
+                const float restitution = std::min(bodyA->GetRestitution(), bodyB->GetRestitution());
+                const float jn = -(1.0f + restitution) * velocityAlongNormal / invMassSum;
+                const Vec2 normalImpulse = contact.normal * jn;
+                if (moveA) bodyA->SetVelocity(bodyA->GetVelocity() - (normalImpulse * invMassA));
+                if (moveB) bodyB->SetVelocity(bodyB->GetVelocity() + (normalImpulse * invMassB));
+
+                // Coulomb friction along the contact tangent.
+                const Vec2 postRelative = bodyB->GetVelocity() - bodyA->GetVelocity();
+                Vec2 tangent = postRelative - contact.normal * Dot(postRelative, contact.normal);
+                const float tangentLenSq = LengthSq(tangent);
+                if (tangentLenSq <= 1e-10f) {
+                    continue;
+                }
+                tangent = tangent / std::sqrt(tangentLenSq);
+
+                const float jtRaw = -Dot(postRelative, tangent) / invMassSum;
+                const float mu = std::sqrt(bodyA->GetFriction() * bodyB->GetFriction());
+                const float jtMax = mu * jn;
+                const float jt = std::clamp(jtRaw, -jtMax, jtMax);
+                const Vec2 frictionImpulse = tangent * jt;
+                if (moveA) bodyA->SetVelocity(bodyA->GetVelocity() - (frictionImpulse * invMassA));
+                if (moveB) bodyB->SetVelocity(bodyB->GetVelocity() + (frictionImpulse * invMassB));
             }
         }
     }

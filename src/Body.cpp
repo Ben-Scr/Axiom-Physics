@@ -88,6 +88,16 @@ namespace AxiomPhys {
         m_restitution = std::clamp(restitution, 0.0f, 1.0f);
     }
 
+    float Body::GetFriction() const noexcept
+    {
+        return m_friction;
+    }
+
+    void Body::SetFriction(float friction) noexcept
+    {
+        m_friction = std::clamp(friction, 0.0f, 1.0f);
+    }
+
     bool Body::IsBoundaryCheckEnabled() const noexcept
     {
         return m_boundaryCheckEnabled;
