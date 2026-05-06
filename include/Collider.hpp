@@ -3,10 +3,10 @@
 #include "ColliderType.hpp"
 #include "AABB.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     class Body;
 
-    class BOLT_PHYS_API Collider
+    class AXIOM_PHYS_API Collider
     {
     public:
         virtual ~Collider() = default;

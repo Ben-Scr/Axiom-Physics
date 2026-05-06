@@ -7,8 +7,8 @@
 
 #include <vector>
 
-namespace BoltPhys {
-    class BOLT_PHYS_API PhysicsWorld
+namespace AxiomPhys {
+    class AXIOM_PHYS_API PhysicsWorld
     {
     public:
         PhysicsWorld();

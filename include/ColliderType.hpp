@@ -1,6 +1,6 @@
 #pragma once
 
-namespace BoltPhys {
+namespace AxiomPhys {
     enum class ColliderType
     {
         Box,

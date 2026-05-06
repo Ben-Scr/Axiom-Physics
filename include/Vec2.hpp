@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 
-namespace BoltPhys {
+namespace AxiomPhys {
     using Vec2 = glm::vec2;
 
     constexpr float Dot(const Vec2& a, const Vec2& b) noexcept

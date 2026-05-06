@@ -4,8 +4,8 @@
 
 #include <vector>
 
-namespace BoltPhys {
-    class BOLT_PHYS_API PolygonCollider final : public Collider
+namespace AxiomPhys {
+    class AXIOM_PHYS_API PolygonCollider final : public Collider
     {
     public:
         PolygonCollider();

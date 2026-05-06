@@ -1,7 +1,7 @@
 #pragma once
 #include "Vec2.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     struct AABB
     {
         Vec2 min;

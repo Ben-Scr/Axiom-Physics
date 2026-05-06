@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace BoltPhys {
+namespace AxiomPhys {
     namespace {
         Vec2 SanitizeHalfExtents(const Vec2& halfExtents) noexcept
         {

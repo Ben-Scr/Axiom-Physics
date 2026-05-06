@@ -1,7 +1,7 @@
 #include "Collider.hpp"
 #include "Body.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     Collider::Collider(ColliderType type) noexcept
         : m_type(type)
     {}

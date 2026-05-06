@@ -1,7 +1,7 @@
 #include "CircleCollider.hpp"
 #include "Body.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     namespace {
         constexpr float kDefaultRadius = 0.5f;
     }

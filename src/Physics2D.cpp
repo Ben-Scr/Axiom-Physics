@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace BoltPhys {
+namespace AxiomPhys {
     PhysicsWorld* Physics2D::s_context = nullptr;
 
     namespace {

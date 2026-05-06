@@ -6,7 +6,7 @@
 #include <limits>
 #include <utility>
 
-namespace BoltPhys {
+namespace AxiomPhys {
     namespace {
         constexpr std::size_t kMinPolygonVertices = 3;
     }

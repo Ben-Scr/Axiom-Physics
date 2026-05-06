@@ -1,7 +1,7 @@
 #include "Body.hpp"
 #include "Collider.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     Body::Body() noexcept
     {
         SetBodyType(BodyType::Dynamic);

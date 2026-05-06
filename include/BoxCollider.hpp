@@ -2,8 +2,8 @@
 #include "Export.hpp"
 #include "Collider.hpp"
 
-namespace BoltPhys {
-    class BOLT_PHYS_API BoxCollider final : public Collider
+namespace AxiomPhys {
+    class AXIOM_PHYS_API BoxCollider final : public Collider
     {
     public:
         BoxCollider() noexcept;

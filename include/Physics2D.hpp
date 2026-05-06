@@ -3,11 +3,11 @@
 #include "Vec2.hpp"
 #include "Contact.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     class Collider;
     class PhysicsWorld;
 
-    class BOLT_PHYS_API Physics2D
+    class AXIOM_PHYS_API Physics2D
     {
     public:
         static void SetContext(PhysicsWorld& world) noexcept;

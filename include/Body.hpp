@@ -3,10 +3,10 @@
 #include "BodyType.hpp"
 #include "Vec2.hpp"
 
-namespace BoltPhys {
+namespace AxiomPhys {
     class Collider;
 
-    class BOLT_PHYS_API Body
+    class AXIOM_PHYS_API Body
     {
     public:
         Body() noexcept;
